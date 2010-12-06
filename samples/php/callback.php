@@ -17,11 +17,16 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'GET' && $_GET['hub_mode'] == 'subscribe' &&       
     $_GET['hub_verify_token'] == VERIFY_TOKEN) {
   echo $_GET['hub_challenge'];
-} else if ($method == 'POST') {                                   
-  $updates = json_decode(file_get_contents("php://input"), true); 
-  // Replace with your own code here to handle the update 
-  // Note the request must complete within 15 seconds.
-  // Otherwise Facebook server will consider it a timeout and 
-  // resend the push notification again.
-  error_log('updates = ' . print_r($updates, true));              
+} else if ($method == 'POST') {
+  $json_results = file_get_contents("php://input");
+  if ($_SERVER['HTTP_X_HUB_SIGNATURE'] == "sha1=" . hash_hmac('sha1', $json_results, '<API SECRET>')) {
+      $updates = json_decode($json_results, true);
+      // Replace with your own code here to handle the update 
+      // Note the request must complete within 15 seconds.
+      // Otherwise Facebook server will consider it a timeout and 
+      // resend the push notification again.
+      error_log('updates = ' . print_r($updates, true));              
+  } else {
+      error_log ("sig: " . $_SERVER['HTTP_X_HUB_SIGNATURE'] . " hash: " . hash_hmac('sha1', $json_results, '<API SECRET>'));
+  }
 }
